@@ -1,0 +1,206 @@
+{
+    "train": [
+        {
+            "generate_loss": 0.21667198836803436,
+            "discriminator_loss": 0.0,
+            "psnr_mean": 15.112639795730903,
+            "psnr_std": 0.03966061154825637,
+            "ssim_mean": 0.21526861190795898,
+            "ssim_std": 0.002655204152688384,
+            "lpips_mean": 0.9897557129152119,
+            "lpips_std": 0.00572107935249361,
+            "l1_loss": 0.13573110662400723,
+            "l2_loss": 0.030815385980531573,
+            "temporal_consistency": 0.010203623188052902,
+            "epoch": 1.0
+        },
+        {
+            "generate_loss": 0.20650934614241123,
+            "discriminator_loss": 0.50238938909024,
+            "psnr_mean": 15.112868598212673,
+            "psnr_std": 0.2069914874355231,
+            "ssim_mean": 0.18526701629161835,
+            "ssim_std": 0.026009924709796906,
+            "lpips_mean": 0.9866239682305604,
+            "lpips_std": 0.012088652232324243,
+            "l1_loss": 0.1364586539566517,
+            "l2_loss": 0.030881764134392142,
+            "temporal_consistency": 0.006377425931402415,
+            "epoch": 2.0
+        },
+        {
+            "generate_loss": 0.23026574030518532,
+            "discriminator_loss": 0.05588492238894105,
+            "psnr_mean": 15.010927375083366,
+            "psnr_std": 0.4566121612356511,
+            "ssim_mean": 0.17206627130508423,
+            "ssim_std": 0.042635105550289154,
+            "lpips_mean": 0.9655502468813211,
+            "lpips_std": 0.017342696298289814,
+            "l1_loss": 0.13794614374637604,
+            "l2_loss": 0.03174804151058197,
+            "temporal_consistency": 0.00749053295917942,
+            "epoch": 3.0
+        },
+        {
+            "generate_loss": 0.23378431797027588,
+            "discriminator_loss": 0.058175782673060894,
+            "psnr_mean": 15.074171950270317,
+            "psnr_std": 0.36487822213484433,
+            "ssim_mean": 0.16555269062519073,
+            "ssim_std": 0.044529661536216736,
+            "lpips_mean": 0.9514103624969721,
+            "lpips_std": 0.043230765181222784,
+            "l1_loss": 0.13687999360263348,
+            "l2_loss": 0.031227787490934134,
+            "temporal_consistency": 0.007393904358780544,
+            "epoch": 4.0
+        },
+        {
+            "generate_loss": 0.23819038271903992,
+            "discriminator_loss": 0.0567451985552907,
+            "psnr_mean": 15.076074702515546,
+            "psnr_std": 0.2514520895911057,
+            "ssim_mean": 0.14882247149944305,
+            "ssim_std": 0.04224802553653717,
+            "lpips_mean": 0.9798194703180343,
+            "lpips_std": 0.030499191785866426,
+            "l1_loss": 0.1383476722985506,
+            "l2_loss": 0.031209483509883285,
+            "temporal_consistency": 0.005464048740187927,
+            "epoch": 5.0
+        }
+    ],
+    "test": [
+        {
+            "generate_loss": 0.21494961716234684,
+            "discriminator_loss": 1.1426627337932587,
+            "psnr_mean": 15.163140935974473,
+            "psnr_std": 0.04705882314259724,
+            "ssim_mean": 0.21373328566551208,
+            "ssim_std": 0.002759641734883189,
+            "lpips_mean": 0.9836550301406533,
+            "lpips_std": 0.005592006891992294,
+            "l1_loss": 0.13535665348172188,
+            "l2_loss": 0.03045933530665934,
+            "temporal_consistency": 0.00999625393576155,
+            "codebook_bottom": {
+                "codebook_usage_pct": 0.1953125,
+                "unique_codes_used": 1.0,
+                "total_codes": 512.0,
+                "perplexity": 1.0
+            },
+            "codebook_top": {
+                "codebook_usage_pct": 0.390625,
+                "unique_codes_used": 1.0,
+                "total_codes": 256.0,
+                "perplexity": 1.0
+            },
+            "epoch": 1.0
+        },
+        {
+            "generate_loss": 0.21850048750638962,
+            "discriminator_loss": 0.06185274478048086,
+            "psnr_mean": 15.078782604055196,
+            "psnr_std": 0.307383883017722,
+            "ssim_mean": 0.1729205846786499,
+            "ssim_std": 0.039260946214199066,
+            "lpips_mean": 0.9801557648461312,
+            "lpips_std": 0.009478764569089068,
+            "l1_loss": 0.1372832003980875,
+            "l2_loss": 0.031135505996644497,
+            "temporal_consistency": 0.005434685819117086,
+            "codebook_bottom": {
+                "codebook_usage_pct": 0.1953125,
+                "unique_codes_used": 1.0,
+                "total_codes": 512.0,
+                "perplexity": 1.0
+            },
+            "codebook_top": {
+                "codebook_usage_pct": 0.390625,
+                "unique_codes_used": 1.0,
+                "total_codes": 256.0,
+                "perplexity": 1.0
+            },
+            "epoch": 3.0
+        },
+        {
+            "generate_loss": 0.21850048750638962,
+            "discriminator_loss": 0.06185274478048086,
+            "psnr_mean": 15.078782604055196,
+            "psnr_std": 0.307383883017722,
+            "ssim_mean": 0.1729205846786499,
+            "ssim_std": 0.039260946214199066,
+            "lpips_mean": 0.9801557648461312,
+            "lpips_std": 0.009478764569089068,
+            "l1_loss": 0.1372832003980875,
+            "l2_loss": 0.031135505996644497,
+            "temporal_consistency": 0.005434685819117086,
+            "codebook_bottom": {
+                "codebook_usage_pct": 0.1953125,
+                "unique_codes_used": 1.0,
+                "total_codes": 512.0,
+                "perplexity": 1.0
+            },
+            "codebook_top": {
+                "codebook_usage_pct": 0.390625,
+                "unique_codes_used": 1.0,
+                "total_codes": 256.0,
+                "perplexity": 1.0
+            },
+            "epoch": 3.0
+        },
+        {
+            "generate_loss": 0.2323869839310646,
+            "discriminator_loss": 0.025312466314062476,
+            "psnr_mean": 15.152068931633186,
+            "psnr_std": 0.24207514875923308,
+            "ssim_mean": 0.15352797508239746,
+            "ssim_std": 0.047390200197696686,
+            "lpips_mean": 0.9917785658035427,
+            "lpips_std": 0.027488063267681224,
+            "l1_loss": 0.13667561300098896,
+            "l2_loss": 0.030584055464714766,
+            "temporal_consistency": 0.0054195970400801995,
+            "codebook_bottom": {
+                "codebook_usage_pct": 0.1953125,
+                "unique_codes_used": 1.0,
+                "total_codes": 512.0,
+                "perplexity": 1.0
+            },
+            "codebook_top": {
+                "codebook_usage_pct": 0.390625,
+                "unique_codes_used": 1.0,
+                "total_codes": 256.0,
+                "perplexity": 1.0
+            },
+            "epoch": 5.0
+        },
+        {
+            "generate_loss": 0.2323869839310646,
+            "discriminator_loss": 0.025312466314062476,
+            "psnr_mean": 15.152068931633186,
+            "psnr_std": 0.24207514875923308,
+            "ssim_mean": 0.15352797508239746,
+            "ssim_std": 0.047390200197696686,
+            "lpips_mean": 0.9917785658035427,
+            "lpips_std": 0.027488063267681224,
+            "l1_loss": 0.13667561300098896,
+            "l2_loss": 0.030584055464714766,
+            "temporal_consistency": 0.0054195970400801995,
+            "codebook_bottom": {
+                "codebook_usage_pct": 0.1953125,
+                "unique_codes_used": 1.0,
+                "total_codes": 512.0,
+                "perplexity": 1.0
+            },
+            "codebook_top": {
+                "codebook_usage_pct": 0.390625,
+                "unique_codes_used": 1.0,
+                "total_codes": 256.0,
+                "perplexity": 1.0
+            },
+            "epoch": 5.0
+        }
+    ]
+}

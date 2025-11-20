@@ -53,8 +53,8 @@ def compress_h264_lowrate(input_path, output_path, target_bps):
 
 
 if __name__ == "__main__":
-    video_path = "filterVideo\\test.mp4"
-    output_path = "filterVideo\\h264.mp4"
+    video_path = "filterVideo\\dataset\\blur.mp4"
+    output_path = "filterVideo\\result\\h264_cmd.mp4"
     compress_h264_lowrate(
         input_path=video_path,
         output_path=output_path,

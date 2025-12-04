@@ -1,9 +1,11 @@
 import numpy as np
-import cv2
 from PIL import Image, ImageFilter
 import io
-import random
 import math
+import zipfile
+import base64
+
+saveSize = {}
 
 def compress_image(img, target_size_kb, format, min_quality=1, max_quality=100):
     """
@@ -18,6 +20,24 @@ def compress_image(img, target_size_kb, format, min_quality=1, max_quality=100):
     Returns:
         PIL.Image compressed
     """
+
+    # Helper: get size after zip + base64
+
+    def get_base64_size(image_bytes):
+        # Base64 encode
+        b64_bytes = base64.b64encode(image_bytes)
+        return len(b64_bytes) / 1024  # KB
+
+    def get_zip_base64_size(image_bytes):
+        # Zip in memory
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            zf.writestr("img", image_bytes)
+        zip_bytes = zip_buffer.getvalue()
+        # Base64 encode
+        b64_bytes = base64.b64encode(zip_bytes)
+        return len(b64_bytes) / 1024  # KB
+    
     # Resize to small resolution first (optional)
     
     # Binary search over JPEG quality
@@ -29,7 +49,7 @@ def compress_image(img, target_size_kb, format, min_quality=1, max_quality=100):
         mid = math.ceil((low + high) / 2)
         buffer = io.BytesIO()
         img.save(buffer, format=format, quality=mid)
-        size_kb = len(buffer.getvalue()) / 1024
+        size_kb = get_zip_base64_size(buffer.getvalue())
 
         if size_kb > target_size_kb:
             # file too big, reduce quality
@@ -45,12 +65,13 @@ def compress_image(img, target_size_kb, format, min_quality=1, max_quality=100):
 
     img.save(buffer, format, quality=low)
 
-    size_kb = len(buffer.getvalue()) / 1024
+    size_kb = get_zip_base64_size(buffer.getvalue())
 
     if size_kb > target_size_kb:
-        low = 1
-        high = 100
         width, height = img.size
+        low = 100 / max(width,height)
+        high = 100 
+        
         while low < high:
             mid = (low + high) / 2
             
@@ -60,7 +81,7 @@ def compress_image(img, target_size_kb, format, min_quality=1, max_quality=100):
             
             buffer = io.BytesIO()
             resized.save(buffer, format=format, quality=1)
-            size_kb = len(buffer.getvalue()) / 1024
+            size_kb = get_zip_base64_size(buffer.getvalue())
 
             if size_kb >= target_size_kb:
                 # file too big, reduce quality
@@ -75,15 +96,29 @@ def compress_image(img, target_size_kb, format, min_quality=1, max_quality=100):
         
         buffer = io.BytesIO()
         resized.save(buffer, format=format, quality=1)
-        size_kb = len(buffer.getvalue()) / 1024
+        size_kb = get_zip_base64_size(buffer.getvalue())
 
         if size_kb > target_size_kb:
-             raise  KeyError("Could not reach target size. :", size_kb, "KB" , "target:", target_size_kb, "KB")
-    
-    size_kb = len(buffer.getvalue()) / 1024
-    print("Final compressed size (KB):", size_kb)
+            lowest = 100 / max(width,height)
+            new_w = max(int(width * lowest / 100), 1)
+            new_h = max(int(height * lowest / 100), 1)
+            resized = img.resize((new_w, new_h))
+
+            buffer = io.BytesIO()
+            resized.save(buffer, format=format, quality=1)
+            size_kb = get_zip_base64_size(buffer.getvalue())
+            if size_kb <= target_size_kb:
+                raise KeyError(f"Algorithm is wrong got size of {size_kb} KB, target: {target_size_kb} KB")
+            else:    
+                raise KeyError(f"Could not reach target size. : {size_kb} KB target: {target_size_kb} KB with width {new_w} height {new_h}")
+            
+
+    size_kb = get_zip_base64_size(buffer.getvalue())
+    print(f"before zip and base64: {len(buffer.getvalue())/1024} base64 only: {size_kb} ")
+    print(f"Final compressed size (KB): {size_kb} with width: {new_w} height {new_h}")
     img = Image.open(buffer)
     img.load()   # force load image data
+
     return img
 
 

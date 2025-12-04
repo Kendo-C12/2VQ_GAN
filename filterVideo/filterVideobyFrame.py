@@ -95,11 +95,13 @@ def process_video(input_path, format, upsample,max_frames=None, fps=30):
 
 
 if __name__ == "__main__":
-    video_path = "filterVideo\\test.mp4"
+    video_path = "filterVideo\\dataset\\test.mp4"
+    allFormat = Image.registered_extensions()
+    print(allFormat)
     # for upsample in ["No_Upsample","bilinear","bicubic"]:
     for upsample in ["No_Upsample"]:
         # for format in ['JPEG','PNG','WEBP','JPEG2000']:
-        for format in ['JPEG2000']:
+        for format in ['JPEG','PNG','WEBP','JPEG2000']:
             for fps in [0.25,0.5,1]:
                 try:
                     if os.path.exists(video_path) :

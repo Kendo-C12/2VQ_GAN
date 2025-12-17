@@ -1,0 +1,42 @@
+import serial
+import time
+import sys
+
+# -------- Configuration --------
+place = "เสาธง"
+PORT = "COM3"          # change if needed
+BAUD_RATE = 115200
+
+# -------- Serial Setup --------
+ser = serial.Serial(
+    port=PORT,
+    baudrate=BAUD_RATE,
+    timeout=1
+)
+
+# -------- File Setup --------
+f = open(f"RSSI_{place}.txt", "w", buffering=1)  # line buffered
+
+print("Logging started... Press Ctrl+C to stop")
+
+try:
+    while True:
+        if ser.in_waiting > 0:
+            line = ser.readline().decode("ascii").strip()
+            print(line)
+            f.write(line + "\n")
+
+        time.sleep(0.01)
+
+except KeyboardInterrupt:
+    print("\nStopped by user")
+
+except Exception as e:
+    import traceback
+    traceback.print_exc()
+
+finally:
+    print("Closing serial and file...")
+    ser.close()
+    f.close()
+    sys.exit(0)

@@ -9,7 +9,10 @@ import cv2
 
 class encoder:
     def transmitImage(self, packet):
-        print(len(packet))
+        with open("temp.txt", "wb") as f:
+            f.write(packet)
+            f.write(b'\n')
+            print(len(packet))
 
     def __init__(self, width=320, height=240, fps=6, kbps=100):
         self.width = width
@@ -187,6 +190,8 @@ class decoder:
         # Reception buffer
         self.receive_buffer = bytearray()
         self.expected_frame_size = None
+
+        self.f = open("temp.txt","rb")
         
         self._init_decoder()
         
@@ -230,6 +235,13 @@ class decoder:
         # Return whatever we got (may be partial or empty)
         return bytes(chunk) if len(chunk) > 0 else None
     
+    def receive_packet_chunk_PC(self):
+        line = self.f.readline()
+        if not line:
+            return None
+        return line
+
+    
     def receive_full_frame(self, ser, frame_size_bytes=None, timeout=10):
         """
         Receive a complete frame from UART.
@@ -242,32 +254,16 @@ class decoder:
         
         print(f"Receiving frame {self.frameCount}...")
         
-        while True:
-            chunk = self.receive_packet_chunk(ser, timeout=1)
-            
-            if chunk:
-                frame_data.extend(chunk)
-                last_receive_time = time.time()
-                print(f"  Received chunk: {len(chunk)} bytes (total: {len(frame_data)})")
-                
-                # If we know the frame size, check if complete
-                if frame_size_bytes and len(frame_data) >= frame_size_bytes:
-                    break
-            else:
-                # No data received
-                if time.time() - last_receive_time > no_data_timeout:
-                    # No data for timeout period, assume frame complete
-                    if len(frame_data) > 0:
-                        break
-                    else:
-                        print("  Timeout waiting for frame data")
-                        return None
-                
-                # Check overall timeout
-                if time.time() - last_receive_time > timeout:
-                    print("  Overall timeout exceeded")
-                    return None
         
+        chunk = self.receive_packet_chunk_PC()
+            
+        if chunk:
+            frame_data.extend(chunk)
+            last_receive_time = time.time()
+            print(f"  Received chunk: {len(chunk)} bytes (total: {len(frame_data)})")        
+        
+        if len(frame_data) == 0:
+            return None
         print(f"✓ Frame received: {len(frame_data)} bytes")
         return bytes(frame_data)
     
@@ -280,32 +276,28 @@ class decoder:
             print("❌ No frame data to decode")
             return None
         
-        try:
-            # Create packet from frame data
-            packet = av.Packet(frame_data)
-            
-            # Decode packet
-            frames = self.codec_context.decode(packet)
-            
-            if frames:
-                # Get the first frame
-                frame = frames[0]
-                
-                # Convert to numpy array (RGB format)
-                img = frame.to_ndarray(format='rgb24')
-                
-                # Convert RGB to BGR for OpenCV
-                img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-                
-                return img_bgr
-            else:
-                print("⚠ No frames decoded from packet")
-                return None
-                
-        except Exception as e:
-            print(f"❌ Decode error: {e}")
-            return None
     
+        # Create packet from frame data
+        packet = av.Packet(frame_data)
+        
+        # Decode packet
+        frames = self.codec_context.decode(packet)
+        
+        if frames:
+            # Get the first frame
+            frame = frames[0]
+            
+            # Convert to numpy array (RGB format)
+            img = frame.to_ndarray(format='rgb24')
+            
+            # Convert RGB to BGR for OpenCV
+            img_bgr = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            
+            return img_bgr
+        else:
+            print("⚠ No frames decoded from packet")
+            return None
+                
     def process_received_frame(self, frame_data):
         """
         Process received frame data: decode and optionally display/save.
@@ -339,7 +331,7 @@ class decoder:
             cv2.imwrite(filepath, frame)
             print(f"✓ Frame saved: {filepath}")
     
-    def receive_and_decode_continuous(self, ser, display=True, save_path=None):
+    def receive_and_decode_continuous(self, ser, display=True, save_path="img"):
         """
         Continuously receive and decode frames from UART.
         
@@ -391,17 +383,70 @@ class decoder:
         finally:
             if display:
                 cv2.destroyAllWindows()
-
+        
+    def test(self, display=True, save_path=None):
+        """
+        Continuously receive and decode frames from UART.
+        
+        Args:
+            ser: Serial port object
+            display: Show frames in window
+            save_path: Directory to save frames (None = don't save)
+        """
+        print("=" * 60)
+        print("Starting continuous reception...")
+        print("Press Ctrl+C to stop")
+        print("=" * 60)
+        
+        if display:
+            cv2.namedWindow("Received Frame", cv2.WINDOW_NORMAL)
+            cv2.resizeWindow("Received Frame", 640, 480)
+        
+        try:
+            while True:
+                # Receive complete frame
+                frame_data = self.receive_full_frame(None)
+                
+                if frame_data:
+                    # Decode frame
+                    decoded_frame = self.process_received_frame(frame_data)
+                    
+                    if decoded_frame is not None:
+                        # Display frame
+                        if display:
+                            self.display_frame(decoded_frame, wait_time=1)
+                        
+                        # Save frame
+                        if save_path:
+                            filename = f"{save_path}/frame_{self.frameCount:04d}.png"
+                            self.save_frame(decoded_frame, filename)
+                    
+                    # Stats every 10 frames
+                    if self.frameCount % 10 == 0:
+                        print(f"\n--- Statistics ---")
+                        print(f"Frames decoded: {self.frameCount}")
+                        print(f"Buffer size: {len(self.frame_buffer)}")
+                        print("-" * 60 + "\n")
+                    time.sleep(1/6)
+                else:
+                    print("⚠ No frame received, waiting...")
+                    time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n⚠ Reception stopped by user")
+        finally:
+            if display:
+                cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     # --- UART setup ---
     SERIAL_PORT = '/dev/serial0'  # Pi UART TX/RX
     BAUD_RATE = 115200
 
-    try:
-        h264 = encoder()
-        h264.process_video()
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        import traceback
-        traceback.print_exc()
+    # encoderPlay = encoder()
+    # encoderPlay.process_video()
+
+    dencoderPlay = decoder()
+    dencoderPlay.test()
+
+
+    

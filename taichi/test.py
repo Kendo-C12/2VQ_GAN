@@ -2,8 +2,9 @@ import serial
 import time
 import RPi.GPIO as GPIO
 import sys
-from imagelib import capture, close_camera
+from imagelib import *
 import traceback
+
 
 # --- UART setup ---
 SERIAL_PORT = '/dev/serial0'  # Pi UART TX/RX
@@ -14,6 +15,8 @@ lon = None
 alt = None
 
 capture_image = True
+
+capture_timer = time.time() - 60
 
 try:
     ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
@@ -36,18 +39,33 @@ if __name__ == "__main__":
     print(f"Transmitting 'Hello World!' to STM32 every 3 seconds via {SERIAL_PORT}")
     try:
         while True:
+            if time.time() - capture_timer > 60:
+                capture_timer = time.time()
+                print("Capturing image interval...")
+                capture_interval(ser)
+                
+        
             if ser.in_waiting > 0:  # If there is data in the buffer
-                data = ser.readline().decode('ascii').strip()  # Read one line from the serial buffer
+                data = ""
+                try:
+                    data = ser.readline().decode('ascii').strip()  # Read one line from the serial buffer
+                except:
+                    data = "UNKNOW_DATA"
                 print(f"Received: {data}")
 
                 bytes_left = ser.in_waiting
                 print(f"Bytes left in buffer: {bytes_left}")
 
                 if data == "PACKET_PLEASE":
+                    # buffer = get_webp_image()
                     buffer = capture()
 
+                    if buffer is None:
+                        print("No image to send.")
+                        continue
+
                     header = "IX".encode('ascii')
-                    ender = "END\n".encode('ascii')
+                    ender = "END".encode('ascii')
 
                     print(f"Captured image size: {len(buffer)} bytes")
                     print(f"Data type: {type(buffer)}")
@@ -55,14 +73,13 @@ if __name__ == "__main__":
                     print(f"Ender type: {type(ender)}")
 
                     message = header + buffer + ender
-
-                    strMessage = message.decode('ascii')
-                    print("Header: " + strMessage[:2]
-                          + " | Ender: " + strMessage[-4:]
-                          + " | Total Length: " + str(len(message)) + " bytes")
                     
                     ser.write(message)  # send message
-                    # print(f"Sent: {message.strip()}")
+            
+                    print("Header: " + message[:2].decode('ascii')
+                        + " | Ender: " + message[-3:].decode('ascii')
+                        + " | Total Length: " + str(len(message)) + " bytes")
+
                     time.sleep(0.1)  # Small delay to avoid busy waiting
                 elif data[:2] == "GG":
                     lat,lon,alt = data[2:].split(',')
@@ -71,8 +88,8 @@ if __name__ == "__main__":
             if capture_image:
                 ser.write("GG".encode('ascii'))
                 capture_image = False
-
     except Exception as e:
         print(f"Error: {e}\n")
         traceback.print_exc()
+    finally:
         cleanup()

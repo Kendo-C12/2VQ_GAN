@@ -72,7 +72,8 @@ if __name__ == "__main__":
                 print(f"Bytes left in buffer: {bytes_left}")
 
                 if data == "PACKET_PLEASE":
-                    buffer = get_webp_image()
+                    # buffer = get_webp_image()
+                    buffer = capture()
 
                     if buffer is None:
                         print("No image to send.")
@@ -81,25 +82,19 @@ if __name__ == "__main__":
                     header = "IX".encode('ascii')
                     ender = "END".encode('ascii')
 
-                    message = header + buffer + ender
-                    
-                    ser.write(message)  # send message
-
-                    time.sleep(0.1)  # Small delay to avoid busy waiting
-                elif data == "APOGEE":
-                    buffer = get_apogee_img()
-
-                    if buffer is None:
-                        print("No image to send.")
-                        continue
-
-                    header = "AP".encode('ascii')
-                    ender = "END".encode('ascii')
+                    # print(f"Captured image size: {len(buffer)} bytes")
+                    # print(f"Data type: {type(buffer)}")
+                    # print(f"Header type: {type(header)}")
+                    # print(f"Ender type: {type(ender)}")
 
                     message = header + buffer + ender
                     
                     ser.write(message)  # send message
-    
+            
+                    # print("Header: " + message[:2].decode('ascii')
+                    #     + " | Ender: " + message[-3:].decode('ascii')
+                    #     + " | Total Length: " + str(len(message)) + " bytes")
+
                     time.sleep(0.1)  # Small delay to avoid busy waiting
                 elif data[:2] == "GG":
                     lat,lon,alt = data[2:].split(',')

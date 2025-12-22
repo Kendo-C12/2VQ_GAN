@@ -30,10 +30,11 @@ config = picam.create_preview_configuration(
 picam.configure(config)
 
 save_directory = f'/home/kendo/cam/pictures'
-web_img = f'/home/kendo/cam'
 
 def binary_search_resize(img, format, target_size_b = 2500):
     low, high = 1, 100
+    best_quality = 1
+    best_size = float('inf')
 
     while low <= high:
         mid = (low + high) // 2
@@ -42,6 +43,8 @@ def binary_search_resize(img, format, target_size_b = 2500):
             img.save(buffer, format=format, quality=mid)
             size = len(buffer.getvalue())
             if size <= target_size_b:
+                best_quality = mid
+                best_size = size
                 low = mid + 1
             else:
                 high = mid - 1
@@ -49,7 +52,7 @@ def binary_search_resize(img, format, target_size_b = 2500):
             print(f"Error during image save: {e}")
             high = mid - 1
 
-    return low - 1
+    return best_quality
 
 def get_next_filename(directory, prefix="image", ext=".jpg"):
     os.makedirs(directory, exist_ok=True)
@@ -76,12 +79,13 @@ def get_latest_file(directory, ext=".jpg"):
     return max(files, key=os.path.getmtime)
 
 def get_webp_image():
-    webp_path = web_img + '/temp.webp'
+    webp_path = get_next_filename(save_directory, "image", ".webp")
     latest_jpg = get_latest_file(save_directory, ".jpg")
     if latest_jpg is None:
         print("No JPG available yet")
         return None
     
+    webp_path = get_next_filename(save_directory, "image", ".webp")
     img = cv2.imread(latest_jpg)
     
     if img is None:
@@ -174,36 +178,6 @@ def capture_interval(ser):
         l.write(f"{jpg_path} saved at : {c}\nGPS position at : lat [{lat}], lon [{lon}], alt [{alt}]")
     picam.stop()
 
-def get_apogee_img():
-    webp_path = web_img + '/temp.webp'
-    latest_jpg = get_latest_file(save_directory, ".jpg")
-    if latest_jpg is None:
-        print("No JPG available yet")
-        return None
-    
-    img = cv2.imread(latest_jpg)
-    
-    if img is None:
-        print("Failed to load JPG")
-        return None
-
-    small = cv2.resize(img, (width_image, height_image), interpolation=cv2.INTER_AREA)
-    pil_img = Image.fromarray(cv2.cvtColor(small, cv2.COLOR_BGR2RGB))
-
-    best_quality = binary_search_resize(pil_img, "WEBP")
-    print(f"Best WEBP quality found: {best_quality}")
-    pil_img.save(webp_path, "WEBP", quality=best_quality)
-
-    t = time.localtime()
-    c = time.strftime("%H:%M:%S", t)
-    
-    with open(webp_path, 'rb') as f:
-        data = f.read()
-
-    with open('image_log.txt', 'a') as l:
-        l.write(f"{webp_path} bytes sent: {len(data)}\n")
-    return data
-
 def close_camera():
     if picam.is_running():
         picam.stop()
@@ -211,8 +185,6 @@ def close_camera():
     print("Camera stopped")
 
 if __name__ == "__main__":
-    frame = get_webp_image()
+    frame = capture()
     print(f"Captured image size: {len(frame)} bytes")
-    with open(os.path.join(web_img, 'test_webp.webp'), 'wb') as f:
-        f.write(frame)
-    close_camera()
+    print(f"Data type: {type(frame)}")

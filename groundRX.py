@@ -13,18 +13,21 @@ pack_size = 0
 
 start_of_packet = 0
 
+frame_num = 0
+
 apogee = False
 
 def save_img():
     global image
-    global frame_count
+    global frame_num
 
-    filename = f"frame_{frame_count}.webp"
+    filename = f"frame_{frame_num}.webp"
 
     byte = b"".join(image.values())
 
     with open(filename, "wb") as f:
         f.write(byte)
+    frame_num += 1
 
 def show_rssi(rssi):
     pass
@@ -81,7 +84,8 @@ if __name__ == "__main__":
                     if frame_count != int(data):
                         frame_count = int(data)
                         save_img()
-                        print("TIME USED FOR PACKET:", time.time() - start_of_packet)
+                        with open("time_log.txt", "a") as tlog:
+                             tlog.write(f"Frame {frame_num} time: {time.time() - start_of_packet} seconds\n")
                         start_of_packet = time.time()
                 elif header == "PS":
                     pack_size = int(data)

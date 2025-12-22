@@ -117,10 +117,9 @@ def capture():
         except Exception as e:
             print(f"Camera start error retrying...")
             time.sleep(1)
-    picam.set_controls({'AfMode': controls.AfModeEnum.Continuous})
     time.sleep(3)
     try:
-        filename = "temp.webp"
+        filename = f"/home/kendo/cam/backup/image_{time.strftime('%Y%m%d_%H%M%S')}.jpg"
         picam.capture_file(filename)
         with Image.open(filename) as img:
             img = img.resize((width_image, height_image))
@@ -140,7 +139,6 @@ def capture_interval(ser):
     global lat, lon, alt,i
     jpg_path = get_next_filename(save_directory, "image", ".jpg")
     picam.start()
-    picam.set_controls({'AfMode': controls.AfModeEnum.Continuous})
     time.sleep(3)
     lat = None
     lon = None
@@ -211,8 +209,6 @@ def close_camera():
     print("Camera stopped")
 
 if __name__ == "__main__":
-    frame = get_webp_image()
+    frame = capture()
     print(f"Captured image size: {len(frame)} bytes")
-    with open(os.path.join(web_img, 'test_webp.webp'), 'wb') as f:
-        f.write(frame)
-    close_camera()
+    print(f"Data type: {type(frame)}")

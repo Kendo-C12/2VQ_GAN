@@ -63,7 +63,6 @@ if __name__ == "__main__":
                 data = ""
                 try:
                     data = ser.readline().decode('ascii').strip()  # Read one line from the serial buffer
-                    ser.reset_input_buffer()
                 except:
                     data = "UNKNOW_DATA"
                 print(data)
@@ -96,10 +95,11 @@ if __name__ == "__main__":
                     #     + " | Total Length: " + str(len(message)) + " bytes")
 
                     time.sleep(0.1)  # Small delay to avoid busy waiting
+                    ser.reset_input_buffer()  # Clear the buffer after reading
                 elif data[:2] == "GG":
                     lat,lon,alt = data[2:].split(',')
                     print(f"Received GPS Data - Latitude: {lat}, Longitude: {lon}, Altitude: {alt}")
-
+                ser.reset_input_buffer()
             if capture_image:
                 ser.write("GG".encode('ascii'))
                 capture_image = False

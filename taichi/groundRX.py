@@ -35,7 +35,7 @@ if __name__ == "__main__":
     while 1:
         try:
             ser = serial.Serial(
-                port='COM4',        
+                port='COM7',        
                 baudrate=115200,
                 timeout=1           # seconds
             )

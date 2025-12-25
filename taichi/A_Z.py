@@ -5,9 +5,10 @@ import signal
 import sys
 import atexit
 
-# --- UART setup ---
-SERIAL_PORT = '/dev/serial0'  # Pi UART TX/RX
+SERIAL_PORT = '/dev/serial0'
 BAUD_RATE = 38400
+
+exit_reason = "UNKNOWN"
 
 try:
     ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
@@ -15,21 +16,46 @@ except serial.SerialException:
     print(f"Cannot open {SERIAL_PORT}")
     sys.exit(1)
 
-# --- Handle cleanup on Ctrl+C ---
-def cleanup(signal_received, frame):
-    print("\nInterrupt received! Cleaning up...")
-    GPIO.cleanup()
-    if ser.is_open:
-        ser.close()
+# -------- Signal handler (WITH args) --------
+def signal_cleanup(sig, frame):
+    global exit_reason
+
+    if sig == signal.SIGINT:
+        exit_reason = "SIGINT (Ctrl+C)"
+    elif sig == signal.SIGTERM:
+        exit_reason = "SIGTERM (kill)"
+    elif sig == signal.SIGHUP:
+        exit_reason = "SIGHUP (UART / TTY / electrical glitch)"
+    else:
+        exit_reason = f"Signal {sig}"
+
+    print(f"\n[Signal Exit] Reason: {exit_reason}")
+    cleanup_common()
     sys.exit(0)
 
-# Catch normal exit
-atexit.register(cleanup)
+# -------- atexit handler (NO args) --------
+def atexit_cleanup():
+    print(f"\n[atexit Exit] Program ended normally")
+    cleanup_common()
 
-# Catch signals
-signal.signal(signal.SIGINT, lambda s,f: cleanup())
-signal.signal(signal.SIGTERM, lambda s,f: cleanup())
-signal.signal(signal.SIGHUP, lambda s,f: cleanup())
+# -------- shared cleanup logic --------
+def cleanup_common():
+    print("[Cleanup] Closing resources...")
+    try:
+        GPIO.cleanup()
+    except Exception as e:
+        print(f"[Cleanup] GPIO cleanup skipped: {e}")
+
+    if ser.is_open:
+        ser.close()
+        print("[Cleanup] UART closed")
+
+# Register handlers
+atexit.register(atexit_cleanup)
+
+signal.signal(signal.SIGINT, signal_cleanup)
+signal.signal(signal.SIGTERM, signal_cleanup)
+signal.signal(signal.SIGHUP, signal_cleanup)
 
 if __name__ == "__main__":
     # --- Main loop ---
@@ -63,4 +89,4 @@ if __name__ == "__main__":
                     print(f"Ender: {message[-3:].decode('ascii')}")
                     time.sleep(0.1)  # Small delay to avoid busy waiting
     except:
-        cleanup(None,None)
+        signal_cleanup("Crtl C",None)

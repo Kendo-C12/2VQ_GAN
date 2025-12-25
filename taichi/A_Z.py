@@ -63,7 +63,7 @@ if __name__ == "__main__":
     print(f"Transmitting 'Hello World!' to STM32 every 3 seconds via {SERIAL_PORT}")
     try:
         while True:
-            if a > time.time():
+            if time.time() > a:
                 a = time.time() + 3
                 ser.write(b'Hello World!\n')
                 print("Sent: Hello World!")

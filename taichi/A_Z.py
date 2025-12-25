@@ -7,7 +7,7 @@ import atexit
 
 # --- UART setup ---
 SERIAL_PORT = '/dev/serial0'  # Pi UART TX/RX
-BAUD_RATE = 115200
+BAUD_RATE = 38400
 
 try:
     ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
@@ -33,9 +33,14 @@ signal.signal(signal.SIGHUP, lambda s,f: cleanup())
 
 if __name__ == "__main__":
     # --- Main loop ---
+    a = time.time()
     print(f"Transmitting 'Hello World!' to STM32 every 3 seconds via {SERIAL_PORT}")
     try:
         while True:
+            if a > time.time():
+                a = time.time() + 3
+                ser.write(b'Hello World!\n')
+                print("Sent: Hello World!")
             if ser.in_waiting > 0:  # If there is data in the buffer
                 data = ser.readline().decode('ascii').strip()  # Read one line from the serial buffer
                 print(f"Received: {data}")

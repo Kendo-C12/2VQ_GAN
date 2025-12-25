@@ -11,7 +11,7 @@ import atexit
 
 # --- UART setup ---
 SERIAL_PORT = '/dev/serial0'  # Pi UART TX/RX
-BAUD_RATE = 115200
+BAUD_RATE = 38400
 
 lat  = None
 lon = None
@@ -62,15 +62,18 @@ if __name__ == "__main__":
             if ser.in_waiting > 0:  # If there is data in the buffer
                 data = ""
                 try:
-                    data = ser.readline().decode('ascii').strip()  # Read one line from the serial buffer
-                except:
+                    data = ser.readline()  # Read one line from the serial buffer
+                    data = data.decode('ascii').strip()
+                    ser.reset_input_buffer()
+                except Exception as e:
+                    print(f"Decoding error: {e}")
                     data = "UNKNOW_DATA"
                 print(data)
 
                 bytes_left = ser.in_waiting
                 print(f"Bytes left in buffer: {bytes_left}")
 
-                if data == "PACKET_PLEASE":
+                if data == "PACK":
                     # buffer = get_webp_image()
                     buffer = capture()
 
@@ -95,11 +98,32 @@ if __name__ == "__main__":
                     #     + " | Total Length: " + str(len(message)) + " bytes")
 
                     time.sleep(0.1)  # Small delay to avoid busy waiting
-                    ser.reset_input_buffer()  # Clear the buffer after reading
-                elif data[:2] == "GG":
-                    lat,lon,alt = data[2:].split(',')
-                    print(f"Received GPS Data - Latitude: {lat}, Longitude: {lon}, Altitude: {alt}")
-                ser.reset_input_buffer()
+                elif data[:3] == "APO":
+                    # buffer = get_webp_image()
+                    buffer = get_apogee_img()
+
+                    if buffer is None:
+                        print("No image to send.")
+                        continue
+
+                    header = "AP".encode('ascii')
+                    ender = "END".encode('ascii')
+
+                    # print(f"Captured image size: {len(buffer)} bytes")
+                    # print(f"Data type: {type(buffer)}")
+                    # print(f"Header type: {type(header)}")
+                    # print(f"Ender type: {type(ender)}")
+
+                    message = header + buffer + ender
+                    
+                    ser.write(message)  # send message
+            
+                    # print("Header: " + message[:2].decode('ascii')
+                    #     + " | Ender: " + message[-3:].decode('ascii')
+                    #     + " | Total Length: " + str(len(message)) + " bytes")
+
+                    time.sleep(0.1)  # Small delay to avoid busy waiting
+
             if capture_image:
                 ser.write("GG".encode('ascii'))
                 capture_image = False

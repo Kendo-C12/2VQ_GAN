@@ -29,6 +29,9 @@ def save_img():
 def show_rssi(rssi):
     pass
 
+def show_gps(lat, lon, alt):
+    print(f"GPS: Lat={lat}, Lon={lon}, Alt={alt}")
+
 if __name__ == "__main__":
     start_of_packet = time.time()
     # Open COM port
@@ -67,7 +70,6 @@ if __name__ == "__main__":
                     print(f"Received packet size: {len(data)} bytes | packet size from header: {pack_size} | {(pack_size == len(data))}")
 
                     pack_size = 0
-               
                 else:
                     line = line[2 + 1:-1]  # remove \n
                     try:
@@ -95,6 +97,9 @@ if __name__ == "__main__":
                     image[int(data)] = packet
                 elif header == "RS": # RSSI
                     show_rssi(data)
+                elif header == "GS": # GPS
+                    [lat, lon, alt] = data.split(',')
+                    show_gps(lat, lon, alt)
                 else:
                     pass
                     # print(line.decode("ascii").strip())

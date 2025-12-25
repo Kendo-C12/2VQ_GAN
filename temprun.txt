@@ -48,8 +48,6 @@ signal.signal(signal.SIGTERM, signal_handler)  # kill <pid>
 
 if __name__ == "__main__":
     # --- Main loop ---
-    message = b""
-    loop_send = False
     print(f"Transmitting 'Hello World!' to STM32 every 3 seconds via {SERIAL_PORT}")
     try:
         while True:
@@ -65,8 +63,8 @@ if __name__ == "__main__":
                 data = ""
                 try:
                     data = ser.readline().decode('ascii').strip()  # Read one line from the serial buffer
-                    ser.reset_input_buffer()
-                except:
+                except Exception as e:
+                    print(f"Error reading serial data: {e}")
                     data = "UNKNOW_DATA"
                 print(data)
 
@@ -74,6 +72,7 @@ if __name__ == "__main__":
                 print(f"Bytes left in buffer: {bytes_left}")
 
                 if data == "PACKET_PLEASE":
+                    # buffer = get_webp_image()
                     buffer = capture()
 
                     if buffer is None:
@@ -83,29 +82,28 @@ if __name__ == "__main__":
                     header = "IX".encode('ascii')
                     ender = "END".encode('ascii')
 
-                    message = header + buffer + ender
-                    loop_send = True
-                elif data == "APOGEE":
-                    buffer = get_apogee_img()
-
-                    if buffer is None:
-                        print("No image to send.")
-                        continue
-
-                    header = "AP".encode('ascii')
-                    ender = "END".encode('ascii')
+                    # print(f"Captured image size: {len(buffer)} bytes")
+                    # print(f"Data type: {type(buffer)}")
+                    # print(f"Header type: {type(header)}")
+                    # print(f"Ender type: {type(ender)}")
 
                     message = header + buffer + ender
-                elif data == "PACKET_END" or data == "APOGEE_END":
-                    loop_send = False
-                elif data[:3] == "GPS":
-                    lat,lon,alt = data[4:].split(',')
-                    print(f"Received GPS Data - Latitude: {lat}, Longitude: {lon}, Altitude: {alt}")
-
-                if loop_send:
+                    
                     ser.write(message)  # send message
-                    time.sleep(0.2)  # Small delay to avoid busy waiting
+            
+                    # print("Header: " + message[:2].decode('ascii')
+                    #     + " | Ender: " + message[-3:].decode('ascii')
+                    #     + " | Total Length: " + str(len(message)) + " bytes")
 
+                    time.sleep(0.1)  # Small delay to avoid busy waiting
+                    ser.reset_input_buffer()  # Clear the buffer after reading
+                elif data[:3] == "APO":
+                    get_apogee_img()
+
+                ser.reset_input_buffer()
+            if capture_image:
+                ser.write("GG".encode('ascii'))
+                capture_image = False
     except Exception as e:
         print(f"Error: {e}\n")
         traceback.print_exc()
